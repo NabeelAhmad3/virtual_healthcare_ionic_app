@@ -1,0 +1,43 @@
+.stats-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .stat-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    color: white;
+
+    h3 { margin: 0; font-size: 22px; font-weight: 700; }
+    p  { margin: 4px 0 0; font-size: 11px; opacity: 0.9; }
+
+    &.blue   { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+    &.orange { background: linear-gradient(135deg, #f7971e, #ffd200); }
+    &.green  { background: linear-gradient(135deg, #11998e, #38ef7d); }
+    &.purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+  }
+}
+
+.appt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  p { margin: 2px 0; font-size: 13px; }
+}
+
+.action-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .user-avatar { font-size: 42px; color: var(--ion-color-primary); }
+  .user-info { flex: 1; h4 { margin: 0; } p { margin: 2px 0; font-size: 12px; color: gray; } }
+}

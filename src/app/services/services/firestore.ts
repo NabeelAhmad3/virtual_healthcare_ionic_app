@@ -1,25 +1,30 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, orderBy } from '@angular/fire/firestore';
+import {Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs} from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
   constructor(private firestore: Firestore) {}
 
-  // ─── DOCTORS ───────────────────────────────────────────────
-  getDoctors(): Observable<any[]> {
+  getAllUsers(): Observable<any[]> {
     const ref = collection(this.firestore, 'users');
-    const q = query(ref, where('role', '==', 'doctor'));
+    return collectionData(ref, { idField: 'id' });
+  }
+
+  getUsersByRole(role: string): Observable<any[]> {
+    const ref = collection(this.firestore, 'users');
+    const q = query(ref, where('role', '==', role));
     return collectionData(q, { idField: 'id' });
+  }
+
+  getDoctors(): Observable<any[]> {
+    return this.getUsersByRole('doctor');
   }
 
   getPhysiotherapists(): Observable<any[]> {
-    const ref = collection(this.firestore, 'users');
-    const q = query(ref, where('role', '==', 'physiotherapist'));
-    return collectionData(q, { idField: 'id' });
+    return this.getUsersByRole('physiotherapist');
   }
 
-  // ─── APPOINTMENTS ──────────────────────────────────────────
   bookAppointment(data: {
     patientId: string;
     patientName: string;
@@ -27,8 +32,8 @@ export class FirestoreService {
     doctorName: string;
     date: string;
     time: string;
-    type: string;   // 'doctor' | 'physiotherapist'
-    status: string; // 'pending'
+    type: string;
+    status: string;
   }) {
     return addDoc(collection(this.firestore, 'appointments'), {
       ...data,
@@ -36,11 +41,11 @@ export class FirestoreService {
     });
   }
 
-getPatientAppointments(patientId: string): Observable<any[]> {
-  const ref = collection(this.firestore, 'appointments');
-  const q = query(ref, where('patientId', '==', patientId));
-  return collectionData(q, { idField: 'id' });
-}
+  getPatientAppointments(patientId: string): Observable<any[]> {
+    const ref = collection(this.firestore, 'appointments');
+    const q = query(ref, where('patientId', '==', patientId));
+    return collectionData(q, { idField: 'id' });
+  }
 
   getDoctorAppointments(doctorId: string): Observable<any[]> {
     const ref = collection(this.firestore, 'appointments');
@@ -48,8 +53,19 @@ getPatientAppointments(patientId: string): Observable<any[]> {
     return collectionData(q, { idField: 'id' });
   }
 
+  getAllAppointments(): Observable<any[]> {
+    const ref = collection(this.firestore, 'appointments');
+    return collectionData(ref, { idField: 'id' });
+  }
+
   updateAppointmentStatus(appointmentId: string, status: string) {
     const ref = doc(this.firestore, 'appointments', appointmentId);
     return updateDoc(ref, { status });
+  }
+
+  async deleteUserFromFirestore(uid: string) {
+    const ref = doc(this.firestore, 'users', uid);
+    const { deleteDoc } = await import('@angular/fire/firestore');
+    return deleteDoc(ref);
   }
 }

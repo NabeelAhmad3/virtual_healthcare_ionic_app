@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { AuthService } from '../../services/services/auth';
 import { FirestoreService } from '../../services/services/firestore';
@@ -23,7 +23,7 @@ export class HomePage implements OnInit {
   quickActions = [
     { title: 'Find Doctor',       icon: 'medical',          route: '/doctors',     color: 'primary'  },
     { title: 'Physiotherapist',   icon: 'fitness',          route: '/doctors',     color: 'tertiary' },
-    { title: 'My Appointments',   icon: 'calendar',         route: '/appointment', color: 'success'  },
+    { title: 'My Appointments',   icon: 'calendar',         route: '/appointments', color: 'success'  },
     { title: 'My Profile',        icon: 'person-circle',    route: '/profile',     color: 'warning'  },
   ];
 
@@ -37,20 +37,32 @@ export class HomePage implements OnInit {
   constructor(
     private auth: Auth,
     private authService: AuthService,
-    private fs: FirestoreService
+    private fs: FirestoreService,
+    private router:Router
   ) {}
 
-  ngOnInit() {
-    this.auth.onAuthStateChanged(async user => {
-      if (user) {
-        this.profile = await this.authService.getUserProfile(user.uid);
-        this.fs.getPatientAppointments(user.uid).subscribe(appts => {
-          this.appointments = appts.slice(0, 3); // latest 3
-          this.pendingCount   = appts.filter(a => a.status === 'pending').length;
-          this.completedCount = appts.filter(a => a.status === 'completed').length;
-          this.upcomingCount  = appts.filter(a => a.status === 'pending').length;
-        });
+  async ngOnInit() {
+  this.auth.onAuthStateChanged(async user => {
+    if (user) {
+      this.profile = await this.authService.getUserProfile(user.uid);
+
+      if (this.profile?.role === 'admin') {
+        this.router.navigate(['/admin']);
+        return;
       }
-    });
-  }
+
+      this.fs.getPatientAppointments(user.uid).subscribe(appts => {
+        const sorted = appts.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0);
+          const dateB = b.createdAt?.toDate?.() || new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        this.appointments   = sorted.slice(0, 3);
+        this.pendingCount   = sorted.filter(a => a.status === 'pending').length;
+        this.completedCount = sorted.filter(a => a.status === 'completed').length;
+        this.upcomingCount  = sorted.filter(a => a.status === 'pending').length;
+      });
+    }
+  });
+}
 }

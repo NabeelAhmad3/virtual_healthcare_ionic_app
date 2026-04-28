@@ -1,6 +1,10 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Book Appointment</ion-title>
+    <ion-title>
+      <span *ngIf="userProfile?.role === 'admin'">All Appointments</span>
+      <span *ngIf="userProfile?.role === 'doctor' || userProfile?.role === 'physiotherapist'">My Patient Appointments</span>
+      <span *ngIf="userProfile?.role === 'patient'">My Appointments</span>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -9,37 +13,83 @@
   <!-- BOOKING FORM -->
   <ion-card *ngIf="specialist">
     <ion-card-header>
-      <ion-card-title>{{ specialist.name }}</ion-card-title>
+      <ion-card-title>Book with {{ specialist.name }}</ion-card-title>
       <ion-card-subtitle>{{ specialist.role | titlecase }}</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>
       <ion-item>
-        <ion-label position="floating">Date</ion-label>
+        <ion-label position="floating">Select Date</ion-label>
         <ion-input [(ngModel)]="date" type="date"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Time</ion-label>
+        <ion-label position="floating">Select Time</ion-label>
         <ion-input [(ngModel)]="time" type="time"></ion-input>
       </ion-item>
       <ion-button expand="block" class="ion-margin-top" (click)="book()" [disabled]="loading">
         {{ loading ? 'Booking...' : 'Confirm Appointment' }}
       </ion-button>
       <ion-text color="success" *ngIf="success">
-        <p>✅ Appointment booked successfully!</p>
+        <p class="ion-text-center">✅ Appointment booked successfully!</p>
       </ion-text>
     </ion-card-content>
   </ion-card>
 
-  <!-- MY APPOINTMENTS -->
-  <h3 class="ion-padding">My Appointments</h3>
-  <ion-card *ngFor="let appt of appointments">
+  <div class="filter-chips">
+    <ion-chip [color]="filterStatus === 'all'       ? 'primary' : 'medium'" (click)="filterStatus = 'all'">All</ion-chip>
+    <ion-chip [color]="filterStatus === 'pending'   ? 'warning' : 'medium'" (click)="filterStatus = 'pending'">Pending</ion-chip>
+    <ion-chip [color]="filterStatus === 'confirmed' ? 'primary' : 'medium'" (click)="filterStatus = 'confirmed'">Confirmed</ion-chip>
+    <ion-chip [color]="filterStatus === 'completed' ? 'success' : 'medium'" (click)="filterStatus = 'completed'">Completed</ion-chip>
+    <ion-chip [color]="filterStatus === 'cancelled' ? 'danger'  : 'medium'" (click)="filterStatus = 'cancelled'">Cancelled</ion-chip>
+  </div>
+
+
+  <div class="ion-text-center ion-padding" *ngIf="filteredAppointments.length === 0">
+    <ion-icon name="calendar-outline" style="font-size: 60px; color: #ccc"></ion-icon>
+    <p style="color: gray">No appointments found</p>
+  </div>
+
+  <ion-card class="appt-card" *ngFor="let appt of filteredAppointments">
     <ion-card-content>
-      <p><strong>Doctor:</strong> {{ appt.doctorName }}</p>
-      <p><strong>Date:</strong> {{ appt.date }}</p>
-      <p><strong>Time:</strong> {{ appt.time }}</p>
-      <ion-badge [color]="appt.status === 'pending' ? 'warning' : 'success'">
-        {{ appt.status | titlecase }}
-      </ion-badge>
+      <div class="appt-header">
+        <ion-icon name="person-circle" class="appt-avatar"></ion-icon>
+        <div class="appt-info">
+          <h4 *ngIf="userProfile?.role === 'patient'">Dr. {{ appt.doctorName }}</h4>
+          <h4 *ngIf="userProfile?.role !== 'patient'">{{ appt.patientName }}</h4>
+          <p>{{ appt.type | titlecase }}</p>
+        </div>
+        <ion-badge [color]="getStatusColor(appt.status)">
+          {{ appt.status | titlecase }}
+        </ion-badge>
+      </div>
+      <div class="appt-details">
+        <span><ion-icon name="calendar-outline"></ion-icon> {{ appt.date }}</span>
+        <span><ion-icon name="time-outline"></ion-icon> {{ appt.time }}</span>
+      </div>
+      <div *ngIf="userProfile?.role === 'admin'" class="admin-info">
+        <p><strong>Patient:</strong> {{ appt.patientName }}</p>
+        <p><strong>Doctor:</strong> {{ appt.doctorName }}</p>
+      </div>
+      <div class="action-buttons"
+           *ngIf="userProfile?.role === 'doctor' ||
+                  userProfile?.role === 'physiotherapist' ||
+                  userProfile?.role === 'admin'">
+        <ion-button size="small" color="primary"
+          *ngIf="appt.status === 'pending'"
+          (click)="updateStatus(appt.id, 'confirmed')">
+          Confirm
+        </ion-button>
+        <ion-button size="small" color="success"
+          *ngIf="appt.status === 'confirmed'"
+          (click)="updateStatus(appt.id, 'completed')">
+          Complete
+        </ion-button>
+        <ion-button size="small" color="danger" fill="outline"
+          *ngIf="appt.status !== 'cancelled' && appt.status !== 'completed'"
+          (click)="updateStatus(appt.id, 'cancelled')">
+          Cancel
+        </ion-button>
+      </div>
+
     </ion-card-content>
   </ion-card>
 

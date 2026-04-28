@@ -23,6 +23,12 @@ export class AppointmentsPage implements OnInit {
   currentUser: any = null;
   userProfile: any = null;
 
+  filterStatus = 'all';
+  get filteredAppointments() {
+    if (this.filterStatus === 'all') return this.appointments;
+    return this.appointments.filter(a => a.status === this.filterStatus);
+  }
+
   constructor(
     private router: Router,
     private auth: Auth,
@@ -33,13 +39,45 @@ export class AppointmentsPage implements OnInit {
     this.specialist = nav?.extras?.state?.['specialist'] || null;
   }
 
-  async ngOnInit() {
-    this.auth.onAuthStateChanged(async user => {
-      if (user) {
-        this.currentUser = user;
-        this.userProfile = await this.authService.getUserProfile(user.uid);
-        this.fs.getPatientAppointments(user.uid).subscribe(a => this.appointments = a);
-      }
+async ngOnInit() {
+  this.auth.onAuthStateChanged(async user => {
+    if (user) {
+      this.currentUser = user;
+      this.userProfile = await this.authService.getUserProfile(user.uid);
+      this.loadAppointments();
+    }
+  });
+}
+loadAppointments() {
+  const role = this.userProfile?.role;
+  const uid  = this.currentUser?.uid;
+
+  if (!role || !uid) {
+    console.error('❌ role or uid is missing', { role, uid });
+    return;
+  }
+
+  if (role === 'admin') {
+    this.fs.getAllAppointments().subscribe(appts => {
+      this.appointments = this.sortByDate(appts);
+    });
+
+  } else if (role === 'doctor' || role === 'physiotherapist') {
+    this.fs.getDoctorAppointments(uid).subscribe(appts => {
+      this.appointments = this.sortByDate(appts);
+    });
+
+  } else {
+    this.fs.getPatientAppointments(uid).subscribe(appts => {
+      this.appointments = this.sortByDate(appts);
+    });
+  }
+}
+  sortByDate(appts: any[]) {
+    return appts.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
     });
   }
 
@@ -60,10 +98,25 @@ export class AppointmentsPage implements OnInit {
       this.success = true;
       this.date = '';
       this.time = '';
+      setTimeout(() => this.success = false, 3000);
     } catch (e) {
       console.error(e);
     } finally {
       this.loading = false;
+    }
+  }
+
+  async updateStatus(appointmentId: string, status: string) {
+    await this.fs.updateAppointmentStatus(appointmentId, status);
+  }
+
+  getStatusColor(status: string) {
+    switch(status) {
+      case 'pending':   return 'warning';
+      case 'confirmed': return 'primary';
+      case 'completed': return 'success';
+      case 'cancelled': return 'danger';
+      default:          return 'medium';
     }
   }
 }
