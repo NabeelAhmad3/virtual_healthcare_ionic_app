@@ -16,15 +16,15 @@ import { FirestoreService } from '../../services/services/firestore';
 export class HomePage implements OnInit {
   profile: any = null;
   appointments: any[] = [];
-  upcomingCount = 0;
+  confirmCount = 0;
   completedCount = 0;
   pendingCount = 0;
+  quickActions: any[] = [];
 
-  quickActions = [
-    { title: 'Find Doctor',       icon: 'medical',          route: '/doctors',     color: 'primary'  },
-    { title: 'Physiotherapist',   icon: 'fitness',          route: '/doctors',     color: 'tertiary' },
-    { title: 'My Appointments',   icon: 'calendar',         route: '/appointments', color: 'success'  },
-    { title: 'My Profile',        icon: 'person-circle',    route: '/profile',     color: 'warning'  },
+  allQuickActions = [
+    { title: 'Find Doctors', icon: 'medical', route: '/doctors', color: 'primary', roles: ['patient'] },
+    { title: 'My Appointments', icon: 'calendar', route: '/appointments', color: 'success', roles: ['patient', 'doctor', 'physiotherapist'] },
+    { title: 'My Profile', icon: 'person-circle', route: '/profile', color: 'warning', roles: ['patient', 'doctor', 'physiotherapist'] },
   ];
 
   healthTips = [
@@ -38,20 +38,29 @@ export class HomePage implements OnInit {
     private auth: Auth,
     private authService: AuthService,
     private fs: FirestoreService,
-    private router:Router
-  ) {}
+    private router: Router
+  ) { }
 
-  async ngOnInit() {
+async ngOnInit() {
   this.auth.onAuthStateChanged(async user => {
     if (user) {
       this.profile = await this.authService.getUserProfile(user.uid);
+
+      this.quickActions = this.allQuickActions.filter(a =>
+        a.roles.includes(this.profile?.role)
+      );
 
       if (this.profile?.role === 'admin') {
         this.router.navigate(['/admin']);
         return;
       }
 
-      this.fs.getPatientAppointments(user.uid).subscribe(appts => {
+      const role = this.profile?.role;
+      const appts$ = (role === 'doctor' || role === 'physiotherapist')
+        ? this.fs.getDoctorAppointments(user.uid)
+        : this.fs.getPatientAppointments(user.uid);
+
+      appts$.subscribe(appts => {
         const sorted = appts.sort((a, b) => {
           const dateA = a.createdAt?.toDate?.() || new Date(0);
           const dateB = b.createdAt?.toDate?.() || new Date(0);
@@ -60,7 +69,7 @@ export class HomePage implements OnInit {
         this.appointments   = sorted.slice(0, 3);
         this.pendingCount   = sorted.filter(a => a.status === 'pending').length;
         this.completedCount = sorted.filter(a => a.status === 'completed').length;
-        this.upcomingCount  = sorted.filter(a => a.status === 'pending').length;
+        this.confirmCount = sorted.filter(a => a.status === 'confirmed').length;
       });
     }
   });

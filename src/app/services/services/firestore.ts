@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import {Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs} from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs, deleteDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
-  constructor(private firestore: Firestore) {}
+  constructor(private firestore: Firestore) { }
 
   getAllUsers(): Observable<any[]> {
     const ref = collection(this.firestore, 'users');
@@ -58,14 +58,34 @@ export class FirestoreService {
     return collectionData(ref, { idField: 'id' });
   }
 
-  updateAppointmentStatus(appointmentId: string, status: string) {
+  async deleteAppointment(appointmentId: string, userRole: string): Promise<void> {
+    if (userRole !== 'admin') {
+      throw new Error('Only admin can delete appointments');
+    }
     const ref = doc(this.firestore, 'appointments', appointmentId);
-    return updateDoc(ref, { status });
+    await deleteDoc(ref);
   }
 
-  async deleteUserFromFirestore(uid: string) {
+  async deleteUserFromFirestore(uid: string, userRole: string): Promise<void> {
+    if (userRole !== 'admin') {
+      throw new Error('Only admin can delete users');
+    }
     const ref = doc(this.firestore, 'users', uid);
-    const { deleteDoc } = await import('@angular/fire/firestore');
-    return deleteDoc(ref);
+    await deleteDoc(ref);
+  }
+
+  async updateAppointmentStatus(appointmentId: string, status: string, userRole?: string): Promise<void> {
+    if (userRole && userRole !== 'admin' && userRole !== 'doctor' && userRole !== 'physiotherapist') {
+      throw new Error('Not authorized to update appointments');
+    }
+    const ref = doc(this.firestore, 'appointments', appointmentId);
+    await updateDoc(ref, { status });
+  }
+
+  updateAppointmentDetails(appointmentId: string, data: Partial<{
+    date: string; time: string; type: string; status: string;
+  }>) {
+    const ref = doc(this.firestore, 'appointments', appointmentId);
+    return updateDoc(ref, data);
   }
 }

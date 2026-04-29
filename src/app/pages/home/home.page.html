@@ -37,8 +37,8 @@
 
     <div class="stat-card upcoming">
       <ion-icon name="calendar-outline"></ion-icon>
-      <h3>{{ upcomingCount }}</h3>
-      <p>Upcoming</p>
+      <h3>{{ confirmCount }}</h3>
+      <p>Confirmed</p>
     </div>
 
   </div>
@@ -46,11 +46,7 @@
   <!-- ── QUICK ACTIONS ────────────────────────── -->
   <div class="section-title ion-padding-horizontal">Quick Actions</div>
   <div class="quick-actions ion-padding-horizontal">
-    <div
-      class="action-card"
-      *ngFor="let action of quickActions"
-      [routerLink]="action.route"
-    >
+    <div class="action-card" *ngFor="let action of quickActions" [routerLink]="action.route">
       <div class="action-icon" [class]="'bg-' + action.color">
         <ion-icon [name]="action.icon"></ion-icon>
       </div>
@@ -66,7 +62,9 @@
       <ion-card-content class="ion-text-center">
         <ion-icon name="calendar-outline" style="font-size:40px; color:#ccc"></ion-icon>
         <p>No appointments yet. Book one now!</p>
-        <ion-button size="small" routerLink="/doctors">Find a Doctor</ion-button>
+        <ion-button size="small" routerLink="/doctors" *ngIf="profile?.role === 'patient'">
+          Find a Doctor
+        </ion-button>
       </ion-card-content>
     </ion-card>
   </div>

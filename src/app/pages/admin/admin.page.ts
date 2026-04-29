@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FirestoreService } from '../../services/services/firestore';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from 'src/app/services/services/auth';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
   imports: [CommonModule, IonicModule, FormsModule],
-  templateUrl: './admin.page.html'
+  templateUrl: './admin.page.html',
+  styleUrls: ['./admin.page.scss']
 })
 export class AdminPage implements OnInit {
   segment = 'appointments';
@@ -16,37 +18,98 @@ export class AdminPage implements OnInit {
   patients: any[] = [];
   doctors: any[] = [];
   physiotherapists: any[] = [];
+  editingAppt: any = null;
+  selectedStatus = '';
+  adminRole = 'admin';
+  adminProfile: any = null;
 
   get totalAppointments() { return this.allAppointments.length; }
-  get pendingCount()  { return this.allAppointments.filter(a => a.status === 'pending').length; }
-  get completedCount(){ return this.allAppointments.filter(a => a.status === 'completed').length; }
+  get pendingCount() { return this.allAppointments.filter(a => a.status === 'pending').length; }
+  get confirmedCount() { return this.allAppointments.filter(a => a.status === 'confirmed').length; }
+  get completedCount() { return this.allAppointments.filter(a => a.status === 'completed').length; }
+  get allStaff() { return [...this.doctors, ...this.physiotherapists]; }
 
-  constructor(private fs: FirestoreService) {}
+  constructor(private fs: FirestoreService, private authService: AuthService) { }
 
   ngOnInit() {
-    this.fs.getAllAppointments().subscribe(a => this.allAppointments = a);
+
+    this.adminProfile = this.authService.getCurrentUser();
+    this.fs.getAllAppointments().subscribe(a => {
+      this.allAppointments = a.sort((x: any, y: any) => {
+        const dA = x.createdAt?.toDate?.() || new Date(0);
+        const dB = y.createdAt?.toDate?.() || new Date(0);
+        return dB.getTime() - dA.getTime();
+      });
+    });
     this.fs.getUsersByRole('patient').subscribe(p => this.patients = p);
     this.fs.getUsersByRole('doctor').subscribe(d => this.doctors = d);
     this.fs.getUsersByRole('physiotherapist').subscribe(p => this.physiotherapists = p);
   }
 
-  async updateStatus(id: string, status: string) {
-    await this.fs.updateAppointmentStatus(id, status);
+  openEdit(appt: any) {
+    this.editingAppt = { ...appt };
+    this.selectedStatus = appt.status;
+  }
+
+  closeEdit() {
+    this.editingAppt = null;
+    this.selectedStatus = '';
+  }
+
+
+  async deleteAppointment(id: string) {
+    if (!id) return;
+    if (confirm('Delete this appointment?')) {
+      try {
+        await this.fs.deleteAppointment(id, this.adminRole);
+        console.log('✅ Deleted');
+      } catch (e) {
+        console.error('❌ Delete failed:', e);
+      }
+    }
   }
 
   async deleteUser(uid: string) {
-    if (confirm('Are you sure you want to delete this user?')) {
-      await this.fs.deleteUserFromFirestore(uid);
+    if (!uid) return;
+    if (confirm('Delete this user?')) {
+      try {
+        await this.fs.deleteUserFromFirestore(uid, this.adminRole);
+        console.log('✅ User deleted');
+      } catch (e) {
+        console.error('❌ Delete failed:', e);
+      }
+    }
+  }
+
+  async saveEdit() {
+    if (!this.editingAppt || !this.selectedStatus) return;
+    try {
+      await this.fs.updateAppointmentStatus(
+        this.editingAppt.id,
+        this.selectedStatus,
+        this.adminRole
+      );
+      this.closeEdit();
+    } catch (e) {
+      console.error('❌ Update failed:', e);
     }
   }
 
   getStatusColor(status: string) {
-    switch(status) {
-      case 'pending':   return 'warning';
+    switch (status) {
+      case 'pending': return 'warning';
       case 'confirmed': return 'primary';
       case 'completed': return 'success';
       case 'cancelled': return 'danger';
-      default:          return 'medium';
+      default: return 'medium';
     }
   }
+
+  getRoleColor(role: string) {
+    return role === 'doctor' ? 'tertiary' : 'secondary';
+  }
+  async logout() {
+    await this.authService.logout();
+  }
+
 }

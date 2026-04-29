@@ -1,22 +1,37 @@
 import { Injectable } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  currentUser$ = user(this.auth);
 
-  constructor(private auth: Auth, private firestore: Firestore, private router: Router) {}
+  private currentUserSubject = new BehaviorSubject<any>(null);
+  currentUser$ = this.currentUserSubject.asObservable();
+
+  constructor(private auth: Auth, private firestore: Firestore, private router: Router) {
+    onAuthStateChanged(this.auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const snap = await getDoc(doc(this.firestore, 'users', firebaseUser.uid));
+        if (snap.exists()) {
+          this.currentUserSubject.next({ uid: firebaseUser.uid, ...snap.data() });
+        }
+      } else {
+        this.currentUserSubject.next(null);
+      }
+    });
+  }
 
   async register(email: string, password: string, name: string, role: string) {
+    if (role === 'admin') throw new Error('Cannot register as admin');
+
     const cred = await createUserWithEmailAndPassword(this.auth, email, password);
     await setDoc(doc(this.firestore, 'users', cred.user.uid), {
       uid: cred.user.uid,
       name,
       email,
-      role,  // 'patient' | 'doctor' | 'physiotherapist' | 'nurse'
+      role,
       createdAt: new Date()
     });
     return cred;
@@ -28,11 +43,16 @@ export class AuthService {
 
   async logout() {
     await signOut(this.auth);
+    this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
   async getUserProfile(uid: string) {
     const snap = await getDoc(doc(this.firestore, 'users', uid));
     return snap.exists() ? snap.data() : null;
+  }
+
+  getCurrentUser() {
+    return this.currentUserSubject.value;
   }
 }
