@@ -8,24 +8,26 @@ import { AuthService } from '../../services/services/auth';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule,RouterModule],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule],
   templateUrl: './register.page.html'
 })
 export class RegisterPage {
   name = '';
   email = '';
   password = '';
+  address = '';
+  phone = '';
   role = 'patient';
   loading = false;
   error = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
   async register() {
     this.loading = true;
     this.error = '';
     try {
-      await this.auth.register(this.email, this.password, this.name, this.role);
+      await this.auth.register(this.email, this.password, this.name, this.role, this.phone, this.address);
       this.router.navigate(['/home']);
     } catch (e: any) {
       this.error = e.message;

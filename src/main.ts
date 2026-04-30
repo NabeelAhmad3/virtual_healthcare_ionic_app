@@ -10,9 +10,9 @@ import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
 import { addIcons } from 'ionicons';
-import { 
+import {
   trashOutline, pencilOutline, saveOutline, closeOutline,
-  personCircle, medkit, fitness, calendarOutline, 
+  personCircle, medkit, fitness, calendarOutline,
   timeOutline,
   checkmarkCircleOutline,
   medical,
@@ -22,11 +22,13 @@ import {
   people,
   searchOutline,
   personCircleOutline,
-  logInOutline,
   logOutOutline,
   heartCircle,
   mailOutline,
-  personOutline
+  personOutline,
+  homeOutline,
+  call,
+  callOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -36,33 +38,33 @@ bootstrapApplication(AppComponent, {
     provideIonicAngular(),
 
     provideRouter(routes, withPreloading(PreloadAllModules)),
-
-    // FIREBASE SETUP 
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore())
   ],
 });
 addIcons({
-'trash-outline': trashOutline,
-'pencil-outline': pencilOutline,
-'save-outline': saveOutline,
-'close-outline': closeOutline,
-'person-circle': personCircle,
-'medkit': medkit,
-'fitness': fitness,
-'calendar-outline': calendarOutline,
-'time-outline': timeOutline,
-'checkmark-circle-outline': checkmarkCircleOutline,
-'medical':medical,
-'calendar':calendar,
-'shield-checkmark': shieldCheckmark,
-'stats-chart': statsChart,
-'people': people,
-'search-outline':searchOutline,
-'person-circle-outline':personCircleOutline,
-'log-out-outline':logOutOutline,
-'heart-circle':heartCircle,
-'mail-outline':mailOutline,
-'person-outline':personOutline,
+  'trash-outline': trashOutline,
+  'pencil-outline': pencilOutline,
+  'save-outline': saveOutline,
+  'close-outline': closeOutline,
+  'person-circle': personCircle,
+  'medkit': medkit,
+  'fitness': fitness,
+  'calendar-outline': calendarOutline,
+  'time-outline': timeOutline,
+  'checkmark-circle-outline': checkmarkCircleOutline,
+  'medical': medical,
+  'calendar': calendar,
+  'shield-checkmark': shieldCheckmark,
+  'stats-chart': statsChart,
+  'people': people,
+  'search-outline': searchOutline,
+  'person-circle-outline': personCircleOutline,
+  'log-out-outline': logOutOutline,
+  'heart-circle': heartCircle,
+  'mail-outline': mailOutline,
+  'person-outline': personOutline,
+  'home-outline': homeOutline,
+  'call-outline': callOutline
 });

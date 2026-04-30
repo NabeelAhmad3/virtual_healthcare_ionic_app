@@ -23,7 +23,7 @@ export class AuthService {
     });
   }
 
-  async register(email: string, password: string, name: string, role: string) {
+  async register(email: string, password: string, name: string, role: string, phone: string, address: string) {
     if (role === 'admin') throw new Error('Cannot register as admin');
 
     const cred = await createUserWithEmailAndPassword(this.auth, email, password);
@@ -32,6 +32,8 @@ export class AuthService {
       name,
       email,
       role,
+      phone,
+      address,
       createdAt: new Date()
     });
     return cred;
