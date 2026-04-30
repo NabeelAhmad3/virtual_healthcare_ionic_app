@@ -107,7 +107,7 @@ export class AdminPage implements OnInit {
     }
   }
 
-  getRoleIcon(role: string) {
+ getRoleIcon(role: string) {
     switch (role) {
       case 'doctor': return 'medkit';
       case 'physiotherapist': return 'fitness';

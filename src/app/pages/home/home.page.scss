@@ -110,21 +110,29 @@
   }
 }
 
-// ── HEALTH TIPS ────────────────────────────────
+.tip-card {
+  min-width: calc(100% - 32px);
+  max-width: calc(100% - 32px);
+  margin: 0 16px;                
+  flex-shrink: 0;
+  border-radius: 14px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #006064;
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  scroll-snap-align: center;     
+}
+
 .tips-scroll {
   display: flex;
-  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-left: 0;   
+  padding-right: 0;
 
-  .tip-card {
-    min-width: 200px;
-    background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
-    border-radius: 14px;
-    padding: 14px;
-    font-size: 13px;
-    color: #006064;
-    font-weight: 500;
-    flex-shrink: 0;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

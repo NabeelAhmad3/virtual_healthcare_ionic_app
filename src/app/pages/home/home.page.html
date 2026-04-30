@@ -11,7 +11,6 @@
 
 <ion-content>
 
-  <!-- ── WELCOME BANNER ───────────────────────── -->
   <div class="welcome-banner">
     <div class="welcome-text">
       <h2>Hello, {{ profile?.name?.split(' ')[0] || 'User' }} 👋</h2>
@@ -21,20 +20,14 @@
   </div>
 
   <div class="ion-padding-horizontal ion-padding-top" *ngIf="profile?.role === 'patient'">
-    <ion-searchbar
-      [(ngModel)]="searchQuery"
-      (ionInput)="onSearch()"
-      (ionClear)="clearSearch()"
-      placeholder="Search doctors, nurses, physiotherapists..."
-      animated="true"
-      show-clear-button="always">
+    <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="onSearch()" (ionClear)="clearSearch()"
+      placeholder="Search doctors, nurses, physiotherapists..." animated="true" show-clear-button="always">
     </ion-searchbar>
   </div>
 
   <div class="ion-padding-horizontal" *ngIf="isSearching">
 
-    <div *ngIf="filteredSpecialists.length === 0"
-         style="text-align:center; padding: 20px">
+    <div *ngIf="filteredSpecialists.length === 0" style="text-align:center; padding: 20px">
       <ion-icon name="search-outline" style="font-size:40px; color:#ccc"></ion-icon>
       <p style="color:gray">No specialists found for "{{ searchQuery }}"</p>
     </div>
@@ -42,10 +35,7 @@
     <ion-card *ngFor="let s of filteredSpecialists" class="ion-margin-top">
       <ion-card-content>
         <div style="display:flex; align-items:center; gap:12px">
-          <ion-icon
-            [name]="getRoleIcon(s.role)"
-            style="font-size: 40px"
-            [color]="getRoleColor(s.role)">
+          <ion-icon [name]="getRoleIcon(s.role)" style="font-size: 40px" [color]="getRoleColor(s.role)">
           </ion-icon>
           <div style="flex:1">
             <h4 style="margin:0; font-weight:bold">{{ s.name }}</h4>
@@ -85,8 +75,7 @@
   <div *ngIf="!isSearching">
     <div class="section-title ion-padding-horizontal">Quick Actions</div>
     <div class="quick-actions ion-padding-horizontal">
-      <div class="action-card" *ngFor="let action of quickActions"
-           [routerLink]="action.route">
+      <div class="action-card" *ngFor="let action of quickActions" [routerLink]="action.route">
         <div class="action-icon" [class]="'bg-' + action.color">
           <ion-icon [name]="action.icon"></ion-icon>
         </div>
@@ -103,8 +92,7 @@
         <ion-card-content class="ion-text-center">
           <ion-icon name="calendar-outline" style="font-size:40px; color:#ccc"></ion-icon>
           <p>No appointments yet. Book one now!</p>
-          <ion-button size="small" routerLink="/doctors"
-            *ngIf="profile?.role === 'patient'">
+          <ion-button size="small" routerLink="/doctors" *ngIf="profile?.role === 'patient'">
             Find a Doctor
           </ion-button>
         </ion-card-content>
@@ -116,16 +104,17 @@
         <ion-card-content>
           <div class="appt-row">
             <div>
-              <ion-icon name="person-circle" class="appt-avatar"></ion-icon>
+              <ion-icon [name]="getRoleIcon(appt.specialistRole || appt.type)"
+                [color]="getRoleColor(appt.specialistRole || appt.type)" class="appt-avatar">
+              </ion-icon>
             </div>
             <div class="appt-info">
-              <!-- ✅ show patient name for staff, doctor name for patient -->
               <h4 *ngIf="profile?.role === 'patient'">{{ appt.doctorName }}</h4>
               <h4 *ngIf="profile?.role !== 'patient'">{{ appt.patientName }}</h4>
               <p>{{ appt.type | titlecase }}</p>
               <p>📅 {{ appt.date }} &nbsp; ⏰ {{ appt.time }}</p>
             </div>
-            <ion-badge [color]="appt.status === 'pending' ? 'warning' : 'success'">
+            <ion-badge [color]="getStatusColor(appt.status)">
               {{ appt.status | titlecase }}
             </ion-badge>
           </div>
@@ -133,15 +122,20 @@
       </ion-card>
     </div>
   </div>
-
   <div *ngIf="!isSearching">
-    <div class="section-title ion-padding-horizontal">Health Tips</div>
-    <div class="tips-scroll ion-padding-horizontal">
-      <div class="tip-card" *ngFor="let h of healthTips">
-        {{ h.tip }}
+
+    <div class="ion-padding-horizontal">
+      <div class="tips-scroll" #tipsContainer (touchstart)="stopAutoScroll()" (touchend)="startAutoScroll()">
+        <ion-card class="appt-card tip-card" *ngFor="let h of healthTips">
+          <ion-card-content>
+            {{ h.tip }}
+          </ion-card-content>
+        </ion-card>
       </div>
     </div>
+    
   </div>
+
 
   <div style="height: 30px"></div>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { Router, RouterModule } from '@angular/router';
@@ -14,7 +14,10 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss']
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('tipsContainer', { static: false }) tipsContainer!: ElementRef;
+
+private scrollInterval: any;
   profile: any = null;
   appointments: any[] = [];
   confirmCount = 0;
@@ -45,7 +48,41 @@ export class HomePage implements OnInit {
     private fs: FirestoreService,
     private router: Router
   ) { }
+ngAfterViewInit() {
+  this.startAutoScroll();
+}
+startAutoScroll() {
+  this.stopAutoScroll();
+  if (!this.tipsContainer) return;
 
+  const container = this.tipsContainer.nativeElement;
+
+  this.scrollInterval = setInterval(() => {
+
+    container.scrollBy({
+      left: container.clientWidth, 
+      behavior: 'smooth'
+    });
+
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 5) {
+      container.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+
+  }, 3000);
+}
+
+stopAutoScroll() {
+  if (this.scrollInterval) {
+    clearInterval(this.scrollInterval);
+  }
+}
+
+ngOnDestroy() {
+  this.stopAutoScroll();
+}
   async ngOnInit() {
     this.auth.onAuthStateChanged(async user => {
       if (user) {
@@ -140,4 +177,14 @@ export class HomePage implements OnInit {
       default: return 'medium';
     }
   }
+  getStatusColor(status: string) {
+  switch (status) {
+    case 'pending':   return 'warning';
+    case 'confirmed': return 'primary';
+    case 'completed': return 'success';
+    case 'cancelled': return 'danger';
+    default:          return 'medium';
+  }
+}
+
 }
