@@ -6,7 +6,7 @@ import { AdminGuard } from './guards/admin-auth-guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'welcome',
     pathMatch: 'full',
   },
   {
@@ -44,4 +44,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin.page').then(m => m.AdminPage),
     canActivate: [AdminGuard]
   },
+  {
+    path: 'welcome',
+    loadComponent: () => import('./pages/welcome/welcome.page').then( m => m.WelcomePage)
+  },
+
 ];

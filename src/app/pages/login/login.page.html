@@ -1,5 +1,8 @@
 <ion-header>
   <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/welcome"></ion-back-button>
+    </ion-buttons>
     <ion-title>Safety Bridge - Login</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -29,8 +32,7 @@
 
       <p class="error-text" *ngIf="error">{{ error }}</p>
 
-      <ion-button expand="block" class="login-btn"
-        (click)="login()" [disabled]="loading">
+      <ion-button expand="block" class="login-btn" (click)="login()" [disabled]="loading">
         {{ loading ? 'Logging in...' : 'Login' }}
       </ion-button>
 

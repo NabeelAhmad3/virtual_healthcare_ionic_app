@@ -29,7 +29,12 @@ import {
   homeOutline,
   callOutline,
   lockClosedOutline,
-  medicalOutline
+  medicalOutline,
+  logInOutline,
+  personAddOutline,
+  heart,
+  time,
+  lockClosed
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -69,5 +74,10 @@ addIcons({
   'home-outline': homeOutline,
   'call-outline': callOutline,
   'lock-closed-outline': lockClosedOutline,
-  'medical-outline':medicalOutline
+  'medical-outline':medicalOutline,
+  'log-in-outline':logInOutline,
+  'person-add-outline':personAddOutline,
+  'heart':heart,
+  'time':time,
+  'lock-closed':lockClosed
 });
