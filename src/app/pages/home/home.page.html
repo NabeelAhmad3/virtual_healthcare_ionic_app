@@ -16,6 +16,7 @@
       <h2>Hello, {{ profile?.name?.split(' ')[0] || 'User' }} 👋</h2>
       <p *ngIf="profile?.role !== 'laboratory'">How are you feeling today?</p>
       <p *ngIf="profile?.role === 'laboratory'">Manage patient lab requests</p>
+      <p *ngIf="profile?.role === 'pharmacy'">Manage medicines & orders</p>
     </div>
     <ion-icon [name]="profile?.role === 'laboratory' ? 'flask' : 'medkit'" class="banner-icon">
     </ion-icon>
@@ -71,17 +72,19 @@
     <div class="stat-card pending">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ pendingCount }}</h3>
-      <p>Pending</p>
+      <p>Pending Appointments</p>
     </div>
-    <div class="stat-card completed">
-      <ion-icon name="checkmark-circle-outline"></ion-icon>
-      <h3>{{ completedCount }}</h3>
-      <p>Completed</p>
-    </div>
+
     <div class="stat-card upcoming">
       <ion-icon name="calendar-outline"></ion-icon>
       <h3>{{ confirmCount }}</h3>
-      <p>Confirmed</p>
+      <p>Confirmed Appointments</p>
+    </div>
+
+    <div class="stat-card completed">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <h3>{{ completedCount }}</h3>
+      <p>Completed Appointments</p>
     </div>
   </div>
 
@@ -144,7 +147,18 @@
         </ion-card-content>
       </ion-card>
     </div>
-
+    <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role === 'pharmacy'">
+      <div class="stat-card pending">
+        <ion-icon name="time-outline"></ion-icon>
+        <h3>{{ medicinePendingCount }}</h3>
+        <p>Pending Orders</p>
+      </div>
+      <div class="stat-card completed">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        <h3>{{ medicineCompletedCount }}</h3>
+        <p>Completed</p>
+      </div>
+    </div>
     <div class="ion-padding-horizontal">
       <ion-card class="appt-card" *ngFor="let appt of appointments" routerLink="/appointments">
         <ion-card-content>
@@ -168,8 +182,7 @@
       </ion-card>
     </div>
   </div>
-  
-  <!-- ── RECENT LAB TESTS (patients only) ── -->
+
   <div *ngIf="!isSearching && profile?.role === 'patient'">
     <div class="section-title ion-padding-horizontal">
       My Lab Tests
@@ -208,17 +221,88 @@
               {{ test.status | titlecase }}
             </ion-badge>
           </div>
-          <!-- Show result if completed -->
           <div *ngIf="test.result" style="margin-top:8px; padding:8px; background:#f0f9f0;
                     border-radius:8px; border-left:4px solid #2dd36f">
             <p style="margin:0; font-size:12px">
-              <strong>🧪 Result:</strong> {{ test.result }}
+              <strong>Result:</strong> {{ test.result }}
             </p>
           </div>
         </ion-card-content>
       </ion-card>
     </div>
+    <div *ngIf="!isSearching && profile?.role === 'pharmacy'">
+      <div class="section-title ion-padding-horizontal">Recent Medicine Orders</div>
+
+      <div class="ion-padding-horizontal" *ngIf="medicineOrders.length === 0">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="medkit-outline" style="font-size:40px; color:#ccc"></ion-icon>
+            <p>No medicine orders yet.</p>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="ion-padding-horizontal">
+        <ion-card class="appt-card" *ngFor="let order of medicineOrders" routerLink="/medicine">
+          <ion-card-content>
+            <div class="appt-row">
+              <ion-icon name="medkit" color="success" class="appt-avatar"></ion-icon>
+              <div class="appt-info">
+                <h4>{{ order.medicineName }}</h4>
+                <p>👤 {{ order.patientName }}</p>
+                <p>📅 {{ order.date }} &nbsp; Qty: {{ order.quantity }}</p>
+              </div>
+              <ion-badge [color]="getStatusColor(order.status)">
+                {{ order.status | titlecase }}
+              </ion-badge>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
+    <div *ngIf="!isSearching && profile?.role === 'patient'">
+      <div class="section-title ion-padding-horizontal">
+        My Medicine Orders
+        <ion-button size="small" fill="clear" routerLink="/medicine" style="float:right; font-size:12px">
+          View All
+        </ion-button>
+      </div>
+
+      <div class="ion-padding-horizontal" *ngIf="patientMedicineOrders.length === 0">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="medkit-outline" style="font-size:40px; color:#ccc"></ion-icon>
+            <p>No medicine orders yet.</p>
+            <ion-button size="small" routerLink="/medicine">Order Medicine</ion-button>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="ion-padding-horizontal">
+        <ion-card class="appt-card" *ngFor="let order of patientMedicineOrders" routerLink="/medicine">
+          <ion-card-content>
+            <div class="appt-row">
+              <ion-icon name="medkit" color="success" class="appt-avatar"></ion-icon>
+              <div class="appt-info">
+                <h4>{{ order.medicineName }}</h4>
+                <p>📅 {{ order.date }} &nbsp; Qty: {{ order.quantity }}</p>
+                <p *ngIf="order.notes" style="font-size:12px; color:gray">📝 {{ order.notes }}</p>
+              </div>
+              <ion-badge [color]="getStatusColor(order.status)">
+                {{ order.status | titlecase }}
+              </ion-badge>
+            </div>
+            <div *ngIf="order.pharmacyNote" style="margin-top:8px; padding:8px; background:#f0f9f0;
+          border-radius:8px; border-left:4px solid #2dd36f">
+              <p style="margin:0; font-size:12px"><strong>Pharmacy Note:</strong> {{ order.pharmacyNote }}</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
   </div>
+
   <div *ngIf="!isSearching">
     <div class="section-title ion-padding-horizontal">Health Tips</div>
     <div class="tips-scroll ion-padding-horizontal" #tipsContainer>

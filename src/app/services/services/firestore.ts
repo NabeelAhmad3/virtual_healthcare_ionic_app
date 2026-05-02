@@ -174,4 +174,36 @@ export class FirestoreService {
       updatedAt: new Date()
     });
   }
+
+  getMedicines() {
+    return collectionData(collection(this.firestore, 'medicines'), { idField: 'id' }) as Observable<any[]>;
+  }
+
+  addMedicine(medicine: any) {
+    return addDoc(collection(this.firestore, 'medicines'), { ...medicine, createdAt: new Date() });
+  }
+
+  deleteMedicine(id: string) {
+    return deleteDoc(doc(this.firestore, 'medicines', id));
+  }
+
+  getAllMedicineOrders() {
+    return collectionData(collection(this.firestore, 'medicineOrders'), { idField: 'id' }) as Observable<any[]>;
+  }
+
+  getPatientMedicineOrders(patientId: string) {
+    const q = query(collection(this.firestore, 'medicineOrders'), where('patientId', '==', patientId));
+    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+  }
+
+  placeMedicineOrder(order: any) {
+    return addDoc(collection(this.firestore, 'medicineOrders'), order);
+  }
+
+  updateMedicineOrderStatus(orderId: string, status: string) {
+    return updateDoc(doc(this.firestore, 'medicineOrders', orderId), { status });
+  }
+  updateMedicine(id: string, data: any) {
+    return updateDoc(doc(this.firestore, 'medicines', id), { ...data, updatedAt: new Date() });
+  }
 }

@@ -1,0 +1,170 @@
+h4 {
+  margin: 0;
+  font-weight: bold;
+}
+
+.small    { font-size: 13px; margin: 2px 0; }
+.x-small  { font-size: 12px; margin: 2px 0; }
+.text-gray { color: gray; }
+
+.empty-state {
+  padding-top: 32px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 50px;
+    color: #ccc;
+  }
+
+  p {
+    color: gray;
+    margin-top: 8px;
+  }
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.order-info {
+  flex: 1;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.med-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.med-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.med-icon-lg {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+.med-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.med-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.badge-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.alert-banner {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  &.alert-warning {
+    background: #fff8e1;
+    border-left: 3px solid #ffc409;
+    color: #7a5c00;
+  }
+
+  &.alert-danger {
+    background: #fdecea;
+    border-left: 3px solid #eb445a;
+    color: #7a0000;
+  }
+}
+
+.modal-alert {
+  margin: 12px 0;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.field-error {
+  margin: 4px 16px 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.card-disabled {
+  opacity: 0.6;
+}
+
+.pharmacy-note {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f0f9f0;
+  border-radius: 8px;
+  border-left: 4px solid #2dd36f;
+
+  p {
+    margin: 0;
+    font-size: 12px;
+  }
+}
+
+.med-modal-name {
+  margin: 0;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.max-label {
+  color: gray;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f0f9f0;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.total-label {
+  color: gray;
+  font-size: 14px;
+}
+
+.total-value {
+  font-size: 18px;
+  color: #2dd36f;
+}
+
+.modal-submit-btn {
+  margin-top: 16px;
+}
+
+.bottom-spacer {
+  height: 30px;
+}

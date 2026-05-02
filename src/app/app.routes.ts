@@ -50,8 +50,15 @@ export const routes: Routes = [
   },
   {
     path: 'lab',
-    loadComponent: () => import('./pages/lab-tests/lab-tests.page').then( m => m.LabTestsPage)
+    loadComponent: () => import('./pages/lab-tests/lab-tests.page').then( m => m.LabTestsPage),
+    canActivate:[authGuard]
   },
+  {
+    path: 'medicine',
+    loadComponent: () => import('./pages/medicines/medicines.page').then( m => m.MedicinesPage),
+    canActivate:[authGuard]
+  },
+
 
 
 ];

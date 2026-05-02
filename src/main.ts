@@ -37,7 +37,14 @@ import {
   lockClosed,
   flask,
   reloadOutline,
-  flaskOutline
+  flaskOutline,
+  checkmarkOutline,
+  addCircleOutline,
+  receiptOutline,
+  medkitOutline,
+  bagOutline,
+  bagCheckOutline,
+  createOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -85,5 +92,12 @@ addIcons({
   'lock-closed':lockClosed,
   'flask':flask,
   'reload-outline':reloadOutline,
-  'flask-outline':flaskOutline
+  'flask-outline':flaskOutline,
+  'checkmark-outline':checkmarkOutline,
+  'add-circle-outline':addCircleOutline,
+  'receipt-outline':receiptOutline,
+  'medkit-outline':medkitOutline,
+  'bag-outline':bagOutline,
+  'bag-check-outline':bagCheckOutline,
+  'create-outline':createOutline
 });

@@ -35,14 +35,22 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   patientLabTests: any[] = [];
   labPatientPendingCount = 0;
   labPatientCompletedCount = 0;
+  medicineOrders: any[] = [];
+  medicinePendingCount = 0;
+  medicineCompletedCount = 0;
+  patientMedicineOrders: any[] = [];
+  patientMedicinePendingCount = 0;
+  patientMedicineCompletedCount = 0;
 
 
   allQuickActions = [
     { title: 'Find Specialists', icon: 'medical', route: '/doctors', color: 'primary', roles: ['patient'] },
     { title: 'Book Lab Test', icon: 'flask', route: '/lab', color: 'tertiary', roles: ['patient'] },
+    { title: 'Order Medicine', icon: 'medkit', route: '/medicine', color: 'success', roles: ['patient'] },
     { title: 'My Appointments', icon: 'calendar', route: '/appointments', color: 'success', roles: ['patient', 'doctor', 'physiotherapist', 'nurse'] },
     { title: 'Lab Requests', icon: 'flask', route: '/lab', color: 'tertiary', roles: ['laboratory'] },
-    { title: 'My Profile', icon: 'person-circle', route: '/profile', color: 'warning', roles: ['patient', 'doctor', 'physiotherapist', 'nurse', 'laboratory'] },
+    { title: 'Medicine Orders', icon: 'medkit', route: '/medicine', color: 'success', roles: ['pharmacy'] },
+    { title: 'My Profile', icon: 'person-circle', route: '/profile', color: 'warning', roles: ['patient', 'doctor', 'physiotherapist', 'nurse', 'laboratory', 'pharmacy'] },
   ];
 
   healthTips = [
@@ -124,6 +132,17 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             this.labPatientPendingCount = tests.filter(t => t.status === 'pending').length;
             this.labPatientCompletedCount = tests.filter(t => t.status === 'completed').length;
           });
+
+          this.fs.getPatientMedicineOrders(user.uid).subscribe(orders => {
+            const sorted = [...orders].sort((a, b) => {
+              const dA = a.createdAt?.toDate?.() || new Date(0);
+              const dB = b.createdAt?.toDate?.() || new Date(0);
+              return dB.getTime() - dA.getTime();
+            });
+            this.patientMedicineOrders = sorted.slice(0, 3);
+            this.patientMedicinePendingCount = orders.filter(o => o.status === 'pending').length;
+            this.patientMedicineCompletedCount = orders.filter(o => o.status === 'completed').length;
+          });
         }
         if (role === 'laboratory') {
           this.fs.getAllLabTests().subscribe({
@@ -142,6 +161,22 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             error: (err) => {
               console.error('❌ Error loading lab tests:', err);
             }
+          });
+          return;
+        }
+        if (role === 'pharmacy') {
+          this.fs.getAllMedicineOrders().subscribe({
+            next: (orders) => {
+              const sorted = orders.sort((a, b) => {
+                const dA = a.createdAt?.toDate?.() || new Date(0);
+                const dB = b.createdAt?.toDate?.() || new Date(0);
+                return dB.getTime() - dA.getTime();
+              });
+              this.medicineOrders = sorted.slice(0, 3);
+              this.medicinePendingCount = sorted.filter(o => o.status === 'pending').length;
+              this.medicineCompletedCount = sorted.filter(o => o.status === 'completed').length;
+            },
+            error: (err) => console.error('Error loading medicine orders:', err)
           });
           return;
         }

@@ -1,0 +1,381 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ profile?.role === 'pharmacy' ? 'Pharmacy Dashboard' : 'Medicines' }}</ion-title>
+    <ion-buttons slot="end" *ngIf="profile?.role === 'pharmacy'">
+      <ion-button (click)="showAddMedicineModal = true">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="activeTab" *ngIf="profile?.role === 'pharmacy'">
+      <ion-segment-button value="orders">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <ion-label>Orders</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="medicines">
+        <ion-icon name="medkit-outline"></ion-icon>
+        <ion-label>Inventory</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <ion-segment [(ngModel)]="activeTab" *ngIf="profile?.role === 'patient'">
+      <ion-segment-button value="browse">
+        <ion-icon name="search-outline"></ion-icon>
+        <ion-label>Browse</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="myorders">
+        <ion-icon name="bag-outline"></ion-icon>
+        <ion-label>My Orders</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="profile?.role === 'pharmacy' && activeTab === 'orders'">
+
+    <div class="filter-chips ion-padding-horizontal ion-padding-top">
+      <ion-chip [color]="selectedOrderStatus === 'all'        ? 'primary' : 'medium'"
+        (click)="selectedOrderStatus='all';        filterOrders()">All</ion-chip>
+      <ion-chip [color]="selectedOrderStatus === 'pending'    ? 'warning' : 'medium'"
+        (click)="selectedOrderStatus='pending';    filterOrders()">Pending</ion-chip>
+      <ion-chip [color]="selectedOrderStatus === 'processing' ? 'primary' : 'medium'"
+        (click)="selectedOrderStatus='processing'; filterOrders()">Processing</ion-chip>
+      <ion-chip [color]="selectedOrderStatus === 'completed'  ? 'success' : 'medium'"
+        (click)="selectedOrderStatus='completed';  filterOrders()">Completed</ion-chip>
+    </div>
+
+    <div class="empty-state ion-padding-horizontal" *ngIf="filteredOrders.length === 0">
+      <ion-icon name="receipt-outline"></ion-icon>
+      <p>No orders found.</p>
+    </div>
+
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-card *ngFor="let order of filteredOrders">
+        <ion-card-content>
+          <div class="order-header">
+            <div class="order-info">
+              <h4>{{ order.medicineName }}</h4>
+              <p class="text-gray small">👤 {{ order.patientName }}</p>
+              <p class="small">📅 {{ order.date }} &nbsp; Qty: <strong>{{ order.quantity }}</strong></p>
+              <p class="small">💰 Rs. {{ order.price }}</p>
+              <p *ngIf="order.notes" class="text-gray x-small">📝 {{ order.notes }}</p>
+            </div>
+            <ion-badge [color]="getStatusColor(order.status)">{{ order.status | titlecase }}</ion-badge>
+          </div>
+
+          <div class="order-actions" *ngIf="order.status !== 'completed' && order.status !== 'cancelled'">
+            <ion-button size="small" color="primary" *ngIf="order.status === 'pending'"
+              (click)="updateOrderStatus(order.id, 'processing')">
+              <ion-icon name="reload-outline" slot="start"></ion-icon> Process
+            </ion-button>
+            <ion-button size="small" color="success" *ngIf="order.status === 'processing'"
+              (click)="updateOrderStatus(order.id, 'completed')">
+              <ion-icon name="checkmark-outline" slot="start"></ion-icon> Complete
+            </ion-button>
+            <ion-button size="small" color="danger" fill="outline" (click)="updateOrderStatus(order.id, 'cancelled')">
+              <ion-icon name="close-outline" slot="start"></ion-icon> Cancel
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+  <div *ngIf="profile?.role === 'pharmacy' && activeTab === 'medicines'">
+
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-button expand="block" color="success" (click)="showAddMedicineModal = true">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        Add New Medicine
+      </ion-button>
+    </div>
+
+    <div class="empty-state ion-padding-horizontal" *ngIf="medicines.length === 0">
+      <ion-icon name="medkit-outline"></ion-icon>
+      <p>No medicines in inventory. Add one!</p>
+    </div>
+
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-card *ngFor="let med of medicines">
+        <ion-card-content>
+          <div class="med-row">
+            <ion-icon [name]="getCategoryIcon(med.category)" class="med-icon" color="success"></ion-icon>
+
+            <div class="med-info">
+              <h4>{{ med.name }}</h4>
+              <p class="text-gray small">{{ med.description }}</p>
+              <div class="badge-row">
+                <ion-badge color="success">Rs. {{ med.price }}</ion-badge>
+                <ion-badge [color]="getStockColor(med.stock)">{{ getStockLabel(med.stock) }}</ion-badge>
+                <ion-badge color="light" *ngIf="med.category">{{ med.category }}</ion-badge>
+              </div>
+
+              <div class="alert-banner alert-warning" *ngIf="getStockStatus(med.stock) === 'low'">
+                ⚠️ Stock is running low. Consider restocking soon.
+              </div>
+              <div class="alert-banner alert-danger" *ngIf="getStockStatus(med.stock) === 'out'">
+                ❌ This medicine is out of stock.
+              </div>
+            </div>
+
+            <div class="med-actions">
+              <ion-button fill="clear" color="primary" (click)="openEditModal(med)">
+                <ion-icon name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="danger" (click)="deleteMedicine(med.id)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+  <div *ngIf="profile?.role === 'patient' && activeTab === 'browse'">
+
+    <div class="empty-state ion-padding" *ngIf="availableMedicines.length === 0">
+      <ion-icon name="medkit-outline"></ion-icon>
+      <p>No medicines available right now.</p>
+    </div>
+
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-card *ngFor="let med of availableMedicines" [class.card-disabled]="med.stock <= 0">
+        <ion-card-content>
+          <div class="med-row">
+            <ion-icon [name]="getCategoryIcon(med.category)" class="med-icon-lg"
+              [color]="med.stock <= 0 ? 'medium' : 'success'">
+            </ion-icon>
+
+            <div class="med-info">
+              <h4>{{ med.name }}</h4>
+              <p class="text-gray small">{{ med.description }}</p>
+              <div class="badge-row">
+                <ion-badge color="success">Rs. {{ med.price }}</ion-badge>
+                <ion-badge [color]="getStockColor(med.stock)">{{ getStockLabel(med.stock) }}</ion-badge>
+                <ion-badge color="light" *ngIf="med.category">{{ med.category }}</ion-badge>
+              </div>
+
+              <div class="alert-banner alert-warning" *ngIf="getStockStatus(med.stock) === 'low'">
+                ⚠️ Only {{ med.stock }} left — order soon!
+              </div>
+              <div class="alert-banner alert-danger" *ngIf="getStockStatus(med.stock) === 'out'">
+                ❌ Currently out of stock. Check back later.
+              </div>
+            </div>
+
+            <ion-button size="small" color="success" [disabled]="med.stock <= 0" (click)="openOrderModal(med)">
+              {{ med.stock <= 0 ? 'Unavailable' : 'Order' }} </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+  <div *ngIf="profile?.role === 'patient' && activeTab === 'myorders'">
+
+    <div class="empty-state ion-padding" *ngIf="patientOrders.length === 0">
+      <ion-icon name="bag-outline"></ion-icon>
+      <p>No orders yet. Browse medicines to order!</p>
+      <ion-button size="small" (click)="activeTab = 'browse'">Browse Medicines</ion-button>
+    </div>
+
+    <div class="ion-padding-horizontal ion-padding-top">
+      <ion-card *ngFor="let order of patientOrders">
+        <ion-card-content>
+          <div class="order-header">
+            <div class="order-info">
+              <h4>{{ order.medicineName }}</h4>
+              <p class="small">📅 {{ order.date }}</p>
+              <p class="small">Qty: <strong>{{ order.quantity }}</strong> &nbsp; 💰 Rs. {{ order.price }}</p>
+              <p *ngIf="order.notes" class="text-gray x-small">📝 {{ order.notes }}</p>
+            </div>
+            <ion-badge [color]="getStatusColor(order.status)">{{ order.status | titlecase }}</ion-badge>
+          </div>
+
+          <div class="pharmacy-note" *ngIf="order.pharmacyNote">
+            <p><strong>Pharmacy Note:</strong> {{ order.pharmacyNote }}</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <div class="bottom-spacer"></div>
+</ion-content>
+<ion-modal [isOpen]="showAddMedicineModal" (didDismiss)="showAddMedicineModal = false">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Add Medicine</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showAddMedicineModal = false">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-list>
+        <ion-item>
+          <ion-label position="stacked">Medicine Name *</ion-label>
+          <ion-input [(ngModel)]="newMedicine.name" placeholder="e.g. Paracetamol 500mg"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Description</ion-label>
+          <ion-textarea [(ngModel)]="newMedicine.description" placeholder="Brief description..."
+            rows="2"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Category</ion-label>
+          <ion-select [(ngModel)]="newMedicine.category" placeholder="Select category">
+            <ion-select-option value="antibiotic">Antibiotic</ion-select-option>
+            <ion-select-option value="painkiller">Painkiller</ion-select-option>
+            <ion-select-option value="vitamin">Vitamin</ion-select-option>
+            <ion-select-option value="cardiac">Cardiac</ion-select-option>
+            <ion-select-option value="other">Other</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Price (Rs.) *</ion-label>
+          <ion-input type="number" [(ngModel)]="newMedicine.price" placeholder="0"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Stock Quantity *</ion-label>
+          <ion-input type="number" [(ngModel)]="newMedicine.stock" placeholder="0"></ion-input>
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" color="success" (click)="addMedicine()" class="modal-submit-btn">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        Add Medicine
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<ion-modal [isOpen]="showEditMedicineModal" (didDismiss)="showEditMedicineModal = false">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Edit Medicine</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showEditMedicineModal = false">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-list>
+        <ion-item>
+          <ion-label position="stacked">Medicine Name *</ion-label>
+          <ion-input [(ngModel)]="editMedicineForm.name"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Description</ion-label>
+          <ion-textarea [(ngModel)]="editMedicineForm.description" rows="2"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Category</ion-label>
+          <ion-select [(ngModel)]="editMedicineForm.category">
+            <ion-select-option value="antibiotic">Antibiotic</ion-select-option>
+            <ion-select-option value="painkiller">Painkiller</ion-select-option>
+            <ion-select-option value="vitamin">Vitamin</ion-select-option>
+            <ion-select-option value="cardiac">Cardiac</ion-select-option>
+            <ion-select-option value="other">Other</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Price (Rs.) *</ion-label>
+          <ion-input type="number" [(ngModel)]="editMedicineForm.price"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Stock Quantity *</ion-label>
+          <ion-input type="number" [(ngModel)]="editMedicineForm.stock"></ion-input>
+        </ion-item>
+      </ion-list>
+
+      <div class="alert-banner alert-danger modal-alert" *ngIf="+editMedicineForm.stock <= 0">
+        ❌ Setting stock to 0 will mark this medicine as out of stock for patients.
+      </div>
+      <div class="alert-banner alert-warning modal-alert"
+        *ngIf="+editMedicineForm.stock > 0 && +editMedicineForm.stock <= 10">
+        ⚠️ Low stock warning will show to patients at {{ editMedicineForm.stock }} units.
+      </div>
+
+      <ion-button expand="block" color="primary" (click)="updateMedicine()" class="modal-submit-btn">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Save Changes
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<ion-modal [isOpen]="showOrderModal" (didDismiss)="showOrderModal = false">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Order Medicine</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showOrderModal = false">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <ion-card color="light">
+        <ion-card-content>
+          <p class="med-modal-name">{{ selectedMedicine?.name }}</p>
+          <p class="text-gray small">{{ selectedMedicine?.description }}</p>
+          <div class="badge-row">
+            <ion-badge color="success">Rs. {{ selectedMedicine?.price }} / unit</ion-badge>
+            <ion-badge [color]="getStockColor(selectedMedicine?.stock)">
+              {{ getStockLabel(selectedMedicine?.stock) }}
+            </ion-badge>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-list>
+        <ion-item [class.ion-invalid]="orderQuantityError">
+          <ion-label position="stacked">
+            Quantity *
+            <span class="max-label">(max {{ selectedMedicine?.stock }})</span>
+          </ion-label>
+          <ion-input type="number" [ngModel]="orderForm.quantity" (ionInput)="onQuantityChange($event)" min="1"
+            [max]="selectedMedicine?.stock">
+          </ion-input>
+        </ion-item>
+
+        <div class="alert-banner alert-danger field-error" *ngIf="orderQuantityError">
+          ❌ {{ orderQuantityError }}
+        </div>
+
+        <ion-item>
+          <ion-label position="stacked">Preferred Date *</ion-label>
+          <ion-input type="date" [(ngModel)]="orderForm.date"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Notes (optional)</ion-label>
+          <ion-textarea [(ngModel)]="orderForm.notes" placeholder="Any special instructions..." rows="2"></ion-textarea>
+        </ion-item>
+      </ion-list>
+
+      <div class="order-total">
+        <span class="total-label">Total Amount</span>
+        <strong class="total-value">Rs. {{ orderTotal }}</strong>
+      </div>
+
+      <ion-button expand="block" color="success" [disabled]="!isOrderFormValid" (click)="placeOrder()"
+        class="modal-submit-btn">
+        <ion-icon name="bag-check-outline" slot="start"></ion-icon>
+        {{ isOrderFormValid ? 'Place Order' : 'Fix errors above' }}
+      </ion-button>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
