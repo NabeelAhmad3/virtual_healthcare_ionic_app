@@ -44,7 +44,10 @@ import {
   medkitOutline,
   bagOutline,
   bagCheckOutline,
-  createOutline
+  createOutline,
+  documentText,
+  documentTextOutline,
+  eyeOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -99,5 +102,8 @@ addIcons({
   'medkit-outline':medkitOutline,
   'bag-outline':bagOutline,
   'bag-check-outline':bagCheckOutline,
-  'create-outline':createOutline
+  'create-outline':createOutline,
+  'document-text':documentText,
+  'document-text-outline':documentTextOutline,
+  'eye-outline':eyeOutline
 });

@@ -39,7 +39,10 @@
     }
   }
 }
-
+.stat-card.teal {
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  color: white;
+}
 .appt-row {
   display: flex;
   justify-content: space-between;

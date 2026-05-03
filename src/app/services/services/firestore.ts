@@ -206,4 +206,57 @@ export class FirestoreService {
   updateMedicine(id: string, data: any) {
     return updateDoc(doc(this.firestore, 'medicines', id), { ...data, updatedAt: new Date() });
   }
+
+  addMedicalRecord(record: any) {
+    return addDoc(collection(this.firestore, 'medicalRecords'), record);
+  }
+
+  getPatientMedicalRecords(patientId: string) {
+    return collectionData(
+      collection(this.firestore, 'medicalRecords'),
+      { idField: 'id' }
+    ).pipe(
+      map((records: any[]) =>
+        records
+          .filter(r => r.patientId === patientId)
+          .sort((a, b) => {
+            const dA = a.createdAt?.toDate?.() || new Date(0);
+            const dB = b.createdAt?.toDate?.() || new Date(0);
+            return dB.getTime() - dA.getTime();
+          })
+      )
+    ) as Observable<any[]>;
+  }
+
+  getAllMedicalRecords() {
+    return collectionData(
+      collection(this.firestore, 'medicalRecords'),
+      { idField: 'id' }
+    ).pipe(
+      map((records: any[]) =>
+        records.sort((a, b) => {
+          const dA = a.createdAt?.toDate?.() || new Date(0);
+          const dB = b.createdAt?.toDate?.() || new Date(0);
+          return dB.getTime() - dA.getTime();
+        })
+      )
+    ) as Observable<any[]>;
+  }
+
+  getPatients() {
+    const q = query(collection(this.firestore, 'users'), where('role', '==', 'patient'));
+    return collectionData(q, { idField: 'id' }) as Observable<any[]>;
+  }
+
+  updateMedicalRecord(id: string, data: any) {
+    return updateDoc(doc(this.firestore, 'medicalRecords', id), { ...data, updatedAt: new Date() });
+  }
+
+  deleteMedicalRecord(id: string) {
+    return deleteDoc(doc(this.firestore, 'medicalRecords', id));
+  }
+  
+  deleteMedicineOrder(id: string) {
+    return deleteDoc(doc(this.firestore, 'medicineOrders', id));
+  }
 }

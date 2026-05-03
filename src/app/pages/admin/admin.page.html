@@ -15,43 +15,44 @@
     <div class="stat-card blue">
       <ion-icon name="stats-chart"></ion-icon>
       <h3>{{ totalAppointments }}</h3>
-      <p>Total Appointments
+      <p>Appointments
     </div>
-    <!-- <div class="stat-card orange">
-      <ion-icon name="time-outline"></ion-icon>
-      <h3>{{ pendingCount }}</h3>
-      <p>Pending</p>
-    </div> -->
     <div class="stat-card green">
       <ion-icon name="flask"></ion-icon>
-      <h3>{{ totalLabTestsCount  }}</h3>
-      <p>Total Lab Tests</p>
+      <h3>{{ totalLabTestsCount }}</h3>
+      <p>Lab Tests</p>
     </div>
-    <div class="stat-card orange">
-      <ion-icon name="medical"></ion-icon>
-      <h3>{{ allStaff.length }}</h3>
-      <p>Specialists</p>
+    <div class="stat-card teal">
+      <ion-icon name="time-outline"></ion-icon>
+      <h3>{{ totalMedicalRecors }}</h3>
+      <p>Medical Records</p>
     </div>
     <div class="stat-card purple">
       <ion-icon name="people"></ion-icon>
       <h3>{{ patients.length }}</h3>
       <p>Patients</p>
     </div>
+    <div class="stat-card orange">
+      <ion-icon name="medical"></ion-icon>
+      <h3>{{ allStaff.length }}</h3>
+      <p>Specialists</p>
+    </div>
   </div>
 
-  <ion-segment [(ngModel)]="segment">
+  <ion-segment [(ngModel)]="segment" scrollable="true">
     <ion-segment-button value="appointments">Appointments</ion-segment-button>
     <ion-segment-button value="labtests">Lab Tests</ion-segment-button>
+    <ion-segment-button value="medicineorders">Medicine Orders</ion-segment-button>
+    <ion-segment-button value="records">Medical Records</ion-segment-button>
     <ion-segment-button value="patients">Patients</ion-segment-button>
     <ion-segment-button value="staff">Specialists</ion-segment-button>
-    <ion-segment-button value="profile">Profile</ion-segment-button>
   </ion-segment>
 
   <div *ngIf="segment === 'appointments'">
     <p style="color:gray;font-size:13px;margin:8px 0">
       {{ totalAppointments }} total appointments
       <span style="color:orange">{{ pendingCount }} pending</span> ·
-      <span style="color:blue">{{ confirmedCount}} confirmed</span> . 
+      <span style="color:blue">{{ confirmedCount}} confirmed</span> .
       <span style="color:green">{{ completedCount}} completed</span>
 
     </p>
@@ -69,10 +70,139 @@
         </div>
         <div class="action-buttons">
           <ion-button size="small" color="medium" fill="outline" (click)="openEdit(appt)">
-            <ion-icon name="pencil-outline" slot="start"></ion-icon>
-            Edit Status
+            <ion-icon name="pencil-outline" slot="start"></ion-icon> Edit Status
           </ion-button>
           <ion-button size="small" color="danger" (click)="deleteAppointment(appt.id)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="segment === 'labtests'">
+    <p style="color:gray;font-size:13px;margin:8px 0">
+      {{ labTests.length }} total ·
+      <span style="color:orange">{{ pendingLabTests }} pending</span> ·
+      <span style="color:blue">{{ processingLabTests }} proccesing</span> .
+      <span style="color:green">{{ completedLabTests }} completed</span>
+    </p>
+
+    <ion-card *ngFor="let test of labTests" class="ion-margin-top">
+      <ion-card-content>
+        <div class="appt-row">
+          <div class="appt-info">
+            <h4>{{ test.testName }}</h4>
+            <p class="text-gray small">👤 {{ test.patientName }}</p>
+            <p class="small">📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}</p>
+            <p *ngIf="test.notes" class="text-gray x-small">📝 {{ test.notes }}</p>
+            <div *ngIf="test.result" class="result-box">
+              <p><strong>🧪 Result:</strong> {{ test.result }}</p>
+            </div>
+          </div>
+          <ion-badge [color]="getStatusColor(test.status)">{{ test.status | titlecase }}</ion-badge>
+        </div>
+        <div class="action-buttons">
+          <ion-button size="small" color="medium" fill="outline" (click)="openEditLabTest(test)">
+            <ion-icon name="pencil-outline" slot="start"></ion-icon> Edit Status
+          </ion-button>
+          <ion-button size="small" color="danger" (click)="deleteLabTest(test.id)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="segment === 'records'">
+    <p style="color:gray;font-size:13px;margin:8px 0">{{ allMedicalRecords.length }} total medical records</p>
+
+    <ion-searchbar [(ngModel)]="medicalRecordSearch" (ionInput)="onMedicalRecordSearch()"
+      placeholder="Search by patient, doctor, diagnosis..." animated="true">
+    </ion-searchbar>
+
+    <div class="empty-state" *ngIf="filteredMedicalRecords.length === 0">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <p>No medical records found.</p>
+    </div>
+
+    <ion-card *ngFor="let record of filteredMedicalRecords" class="ion-margin-top">
+      <ion-card-content>
+
+        <div class="record-row">
+          <div class="record-info">
+            <div class="record-top">
+            </div>
+            <p class="small text-gray">👤 Patient: <strong>{{ record.patientName }}</strong></p>
+            <p class="small text-gray">
+              🩺 {{ record.doctorName }}
+              <ion-badge [color]="getDoctorRoleColor(record.doctorRole)" class="role-badge">
+                {{ getDoctorRoleLabel(record.doctorRole) }}
+              </ion-badge>
+            </p>
+            <p class="small text-gray">🗓 {{ formatDate(record.createdAt) }}</p>
+            <p class="small" *ngIf="record.symptoms"><strong>Symptoms:</strong> {{ record.symptoms }}</p>
+          </div>
+        </div>
+
+        <div class="followup-row" *ngIf="record.followUpDate">
+          <ion-icon name="calendar-outline" color="warning"></ion-icon>
+          <span class="small">Follow-up: {{ record.followUpDate }}</span>
+        </div>
+
+        <div class="action-buttons">
+          <ion-button size="small" color="primary" fill="outline" (click)="openRecordDetail(record)">
+            <ion-icon name="eye-outline" slot="start"></ion-icon> View
+          </ion-button>
+          <ion-button size="small" color="medium" fill="outline" (click)="openEditRecord(record)">
+            <ion-icon name="pencil-outline" slot="start"></ion-icon> Edit
+          </ion-button>
+          <ion-button size="small" color="danger" (click)="deleteRecord(record.id)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+  </div>
+  <div *ngIf="segment === 'medicineorders'">
+    <p style="color:gray;font-size:13px;margin:8px 0">
+      {{ allMedicineOrders.length }} total ·
+      <span style="color:orange">{{ pendingMedicineOrders }} pending</span> ·
+      <span style="color:blue">{{ processingMedicineOrders }} proccesing</span> .
+      <span style="color:green">{{ completedMedicineOrders }} completed</span>
+    </p>
+    <ion-searchbar [(ngModel)]="medicineOrderSearch" (ionInput)="onMedicineOrderSearch()"
+      placeholder="Search by patient, medicine, status..." animated="true">
+    </ion-searchbar>
+
+    <div class="empty-state" *ngIf="filteredMedicineOrders.length === 0">
+      <ion-icon name="medkit-outline"></ion-icon>
+      <p>No medicine orders found.</p>
+    </div>
+
+    <ion-card *ngFor="let order of filteredMedicineOrders" class="ion-margin-top">
+      <ion-card-content>
+        <div class="appt-row">
+          <div class="appt-info">
+            <h4>{{ order.medicineName }}</h4>
+            <p class="small text-gray">👤 {{ order.patientName }}</p>
+            <p class="small">📅 {{ order.date }} &nbsp; Qty: <strong>{{ order.quantity }}</strong></p>
+            <p class="small">💰 Rs. {{ order.price }}</p>
+            <p *ngIf="order.notes" class="x-small text-gray">📝 {{ order.notes }}</p>
+            <div *ngIf="order.pharmacyNote" class="result-box">
+              <p><strong>Pharmacy Note:</strong> {{ order.pharmacyNote }}</p>
+            </div>
+          </div>
+          <ion-badge [color]="getStatusColor(order.status)">
+            {{ order.status | titlecase }}
+          </ion-badge>
+        </div>
+        <div class="action-buttons">
+          <ion-button size="small" color="medium" fill="outline" (click)="openEditMedicineOrder(order)">
+            <ion-icon name="pencil-outline" slot="start"></ion-icon> Edit Status
+          </ion-button>
+          <ion-button size="small" color="danger" (click)="deleteMedicineOrder(order.id)">
             <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
@@ -101,98 +231,7 @@
       </ion-card-content>
     </ion-card>
   </div>
-  <div *ngIf="segment === 'labtests'">
-    <p style="color:gray;font-size:13px;margin:8px 0">
-      {{ labTests.length }} total ·
-      <span style="color:orange">{{ pendingLabTests }} pending</span> ·
-      <span style="color:green">{{ processingLabTests }} proccesing</span> .
-      <span style="color:green">{{ completedLabTests }} completed</span>
-    </p>
 
-    <ion-card *ngFor="let test of labTests" class="ion-margin-top">
-      <ion-card-content>
-        <div style="display:flex; justify-content:space-between; align-items:flex-start">
-          <div style="flex:1">
-            <h4 style="margin:0; font-weight:bold">{{ test.testName }}</h4>
-            <p style="margin:4px 0; color:gray">👤 {{ test.patientName }}</p>
-            <p style="margin:2px 0; color:gray; font-size:13px">
-              📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}
-            </p>
-            <p *ngIf="test.notes" style="margin:2px 0; color:gray; font-size:12px">
-              📝 {{ test.notes }}
-            </p>
-            <div *ngIf="test.result" style="margin-top:8px; padding:8px; background:#f0f9f0; 
-                      border-radius:8px; border-left:4px solid #2dd36f">
-              <p style="margin:0; font-size:13px">
-                <strong>🧪 Result:</strong> {{ test.result }}
-              </p>
-            </div>
-          </div>
-          <ion-badge [color]="getStatusColor(test.status)">
-            {{ test.status | titlecase }}
-          </ion-badge>
-        </div>
-
-        <div style="display:flex; gap:8px; margin-top:12px">
-          <ion-button size="small" color="medium" fill="outline" (click)="openEditLabTest(test)">
-            <ion-icon name="pencil-outline" slot="start"></ion-icon>
-            Edit
-          </ion-button>
-          <ion-button size="small" color="danger" (click)="deleteLabTest(test.id)">
-            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </div>
-
-      </ion-card-content>
-    </ion-card>
-  </div>
-  <ion-modal [isOpen]="!!editingLabTest" (didDismiss)="closeEditLabTest()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar color="primary">
-          <ion-title>Update Test Status</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeEditLabTest()">
-              <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-
-      <ion-content class="ion-padding" *ngIf="editingLabTest">
-
-        <ion-card>
-          <ion-card-content>
-            <p><strong>Test:</strong> {{ editingLabTest.testName }}</p>
-            <p><strong>Patient:</strong> {{ editingLabTest.patientName }}</p>
-            <p>📅 {{ editingLabTest.date }} &nbsp; ⏰ {{ editingLabTest.time }}</p>
-          </ion-card-content>
-        </ion-card>
-
-        <ion-item>
-          <ion-label position="stacked">Update Status</ion-label>
-          <ion-select [(ngModel)]="updatingLabStatus" interface="action-sheet">
-            <ion-select-option value="pending">Pending</ion-select-option>
-            <ion-select-option value="processing">Processing</ion-select-option>
-            <ion-select-option value="completed">Completed</ion-select-option>
-            <ion-select-option value="cancelled">Cancelled</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Test Result</ion-label>
-          <ion-textarea [(ngModel)]="updatingLabResult" rows="4" placeholder="Enter test result details...">
-          </ion-textarea>
-        </ion-item>
-
-        <ion-button expand="block" class="ion-margin-top" (click)="saveLabEdit()">
-          <ion-icon name="save-outline" slot="start"></ion-icon>
-          Save Changes
-        </ion-button>
-
-      </ion-content>
-    </ng-template>
-  </ion-modal>
   <div *ngIf="segment === 'staff'">
     <p style="color:gray;font-size:13px;margin:8px 0">
       {{ doctors.length }} doctors · {{ physiotherapists.length }} physiotherapists {{ nurses.length }} nurses
@@ -206,9 +245,7 @@
             <p>{{ d.email }}</p>
             <p *ngIf="d.phone">📞 {{ d.phone }}</p>
             <p *ngIf="d.specialization">🩺 {{ d.specialization }}</p>
-            <ion-badge [color]="getRoleColor(d.role)">
-              {{ d.role | titlecase }}
-            </ion-badge>
+            <ion-badge [color]="getRoleColor(d.role)">{{ d.role | titlecase }}</ion-badge>
           </div>
           <ion-button size="small" color="danger" fill="outline" (click)="deleteUser(d.uid || d.id)">
             <ion-icon name="trash-outline"></ion-icon>
@@ -221,8 +258,8 @@
   <div *ngIf="segment === 'profile'">
     <ion-card class="ion-margin-top">
       <ion-card-content class="ion-text-center">
-        <ion-icon name="shield-checkmark" style="font-size: 80px; color: var(--ion-color-primary)"></ion-icon>
-        <h2 style="margin-top: 10px; font-weight: bold">{{ adminProfile?.name }}</h2>
+        <ion-icon name="shield-checkmark" style="font-size:80px; color:var(--ion-color-primary)"></ion-icon>
+        <h2 style="margin-top:10px; font-weight:bold">{{ adminProfile?.name }}</h2>
         <ion-badge color="danger">Admin</ion-badge>
 
         <hr style="margin: 16px 0" />
@@ -252,7 +289,7 @@
           </ion-item>
         </ion-list>
 
-        <hr style="margin: 16px 0" />
+        <hr style="margin:16px 0" />
         <ion-button expand="block" color="danger" (click)="logout()">
           <ion-icon name="log-out-outline" slot="start"></ion-icon>
           Logout
@@ -298,9 +335,229 @@
       </ion-item>
 
       <ion-button expand="block" class="ion-margin-top" (click)="saveEdit()">
-        <ion-icon name="save-outline" slot="start"></ion-icon>
-        Save Status
+        <ion-icon name="save-outline" slot="start"></ion-icon> Save Status
       </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="!!editingLabTest" (didDismiss)="closeEditLabTest()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Update Lab Test</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeEditLabTest()"><ion-icon name="close-outline"
+              slot="icon-only"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="editingLabTest">
+      <ion-card>
+        <ion-card-content>
+          <p><strong>Test:</strong> {{ editingLabTest.testName }}</p>
+          <p><strong>Patient:</strong> {{ editingLabTest.patientName }}</p>
+          <p>📅 {{ editingLabTest.date }} &nbsp; ⏰ {{ editingLabTest.time }}</p>
+        </ion-card-content>
+      </ion-card>
+      <ion-item>
+        <ion-label position="stacked">Update Status</ion-label>
+        <ion-select [(ngModel)]="updatingLabStatus" interface="action-sheet">
+          <ion-select-option value="pending">Pending</ion-select-option>
+          <ion-select-option value="processing">Processing</ion-select-option>
+          <ion-select-option value="completed">Completed</ion-select-option>
+          <ion-select-option value="cancelled">Cancelled</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Test Result</ion-label>
+        <ion-textarea [(ngModel)]="updatingLabResult" rows="4"
+          placeholder="Enter test result details..."></ion-textarea>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="saveLabEdit()">
+        <ion-icon name="save-outline" slot="start"></ion-icon> Save Changes
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="showRecordDetailModal" (didDismiss)="showRecordDetailModal = false">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Record Detail</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="showRecordDetailModal = false">
+            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="selectedRecordDetail">
+
+      <div class="detail-type-row">
+        <ion-badge [color]="getRecordType(selectedRecordDetail.recordType).color" class="detail-type-badge">
+          <ion-icon [name]="getRecordType(selectedRecordDetail.recordType).icon"></ion-icon>
+          {{ getRecordType(selectedRecordDetail.recordType).label }}
+        </ion-badge>
+      </div>
+
+      <ion-card color="light">
+        <ion-card-content>
+          <div class="detail-doctor-row">
+            <ion-icon name="person-circle" color="primary" style="font-size:36px"></ion-icon>
+            <div>
+              <p style="margin:0; font-size:13px; color:gray">Patient</p>
+              <p style="margin:0; font-weight:bold">{{ selectedRecordDetail.patientName }}</p>
+            </div>
+          </div>
+          <div class="detail-doctor-row" style="margin-top:8px">
+            <ion-icon name="medkit" [color]="getDoctorRoleColor(selectedRecordDetail.doctorRole)"
+              style="font-size:36px"></ion-icon>
+            <div>
+              <p style="margin:0; font-size:13px; color:gray">{{ getDoctorRoleLabel(selectedRecordDetail.doctorRole) }}
+              </p>
+              <p style="margin:0; font-weight:bold">{{ selectedRecordDetail.doctorName }}</p>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="detail-field">
+        <p class="detail-label">Diagnosis</p>
+        <p class="detail-value">{{ selectedRecordDetail.diagnosis }}</p>
+      </div>
+      <div class="detail-field" *ngIf="selectedRecordDetail.symptoms">
+        <p class="detail-label">Symptoms</p>
+        <p class="detail-value">{{ selectedRecordDetail.symptoms }}</p>
+      </div>
+      <div class="detail-field" *ngIf="selectedRecordDetail.treatment">
+        <p class="detail-label">Treatment</p>
+        <p class="detail-value">{{ selectedRecordDetail.treatment }}</p>
+      </div>
+      <div class="detail-field" *ngIf="selectedRecordDetail.medications">
+        <p class="detail-label">Medications</p>
+        <div class="medications-box">
+          <ion-icon name="medkit-outline" color="success"></ion-icon>
+          <p>{{ selectedRecordDetail.medications }}</p>
+        </div>
+      </div>
+      <div class="detail-field" *ngIf="selectedRecordDetail.followUpDate">
+        <p class="detail-label">Follow-up Date</p>
+        <div class="followup-box">
+          <ion-icon name="calendar-outline" color="warning"></ion-icon>
+          <p>{{ selectedRecordDetail.followUpDate }}</p>
+        </div>
+      </div>
+      <div class="detail-field" *ngIf="selectedRecordDetail.notes">
+        <p class="detail-label">Notes</p>
+        <p class="detail-value text-gray">{{ selectedRecordDetail.notes }}</p>
+      </div>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="!!editingRecord" (didDismiss)="closeEditRecord()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Edit Medical Record</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeEditRecord()">
+            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="editingRecord">
+      <div class="modal-patient-pill">
+        <ion-icon name="person-circle" color="primary"></ion-icon>
+        <span>{{ editingRecord.patientName }}</span>
+      </div>
+
+      <ion-list>
+        <ion-item>
+          <ion-label position="stacked">Record Type</ion-label>
+          <ion-select [(ngModel)]="editingRecord.recordType">
+            <ion-select-option *ngFor="let t of recordTypes" [value]="t.value">{{ t.label }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Diagnosis *</ion-label>
+          <ion-input [(ngModel)]="editingRecord.diagnosis"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Symptoms</ion-label>
+          <ion-textarea [(ngModel)]="editingRecord.symptoms" rows="2"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Treatment</ion-label>
+          <ion-textarea [(ngModel)]="editingRecord.treatment" rows="2"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Medications</ion-label>
+          <ion-textarea [(ngModel)]="editingRecord.medications" rows="2"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Follow-up Date</ion-label>
+          <ion-input type="date" [(ngModel)]="editingRecord.followUpDate"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Notes</ion-label>
+          <ion-textarea [(ngModel)]="editingRecord.notes" rows="2"></ion-textarea>
+        </ion-item>
+      </ion-list>
+
+      <ion-button expand="block" color="primary" (click)="saveEditRecord()" class="ion-margin-top">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Save Changes
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<ion-modal [isOpen]="!!editingMedicineOrder" (didDismiss)="closeEditMedicineOrder()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Update Order Status</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeEditMedicineOrder()">
+            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="editingMedicineOrder">
+
+      <ion-card color="light">
+        <ion-card-content>
+          <h4>{{ editingMedicineOrder.medicineName }}</h4>
+          <p class="small text-gray">👤 {{ editingMedicineOrder.patientName }}</p>
+          <p class="small">📅 {{ editingMedicineOrder.date }}</p>
+          <p class="small">Qty: <strong>{{ editingMedicineOrder.quantity }}</strong>
+            &nbsp; 💰 Rs. {{ editingMedicineOrder.price }}</p>
+          <p *ngIf="editingMedicineOrder.notes" class="x-small text-gray">
+            📝 {{ editingMedicineOrder.notes }}
+          </p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-item>
+        <ion-label position="stacked">Update Status</ion-label>
+        <ion-select [(ngModel)]="updatingOrderStatus" interface="action-sheet">
+          <ion-select-option value="pending">Pending</ion-select-option>
+          <ion-select-option value="processing">Processing</ion-select-option>
+          <ion-select-option value="completed">Completed</ion-select-option>
+          <ion-select-option value="cancelled">Cancelled</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-button expand="block" color="success" class="ion-margin-top" (click)="saveEditMedicineOrder()">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Save Changes
+      </ion-button>
+
     </ion-content>
   </ng-template>
 </ion-modal>
