@@ -33,13 +33,14 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   labProcessingCount = 0;
   labCompletedCount = 0;
   patientLabTests: any[] = [];
-  labPatientPendingCount = 0;
+  labPatientproccessingCount =0;
   labPatientCompletedCount = 0;
   medicineOrders: any[] = [];
   medicinePendingCount = 0;
   medicineCompletedCount = 0;
   patientMedicineOrders: any[] = [];
   patientMedicinePendingCount = 0;
+   patientMedicineProccessingCount = 0;
   patientMedicineCompletedCount = 0;
 
 
@@ -129,9 +130,9 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
               return dB.getTime() - dA.getTime();
             });
             this.patientLabTests = sorted.slice(0, 3);
-            this.labPatientPendingCount = tests.filter(t => t.status === 'pending').length;
+            this.labPatientproccessingCount = tests.filter(t => t.status === 'processing').length;
             this.labPatientCompletedCount = tests.filter(t => t.status === 'completed').length;
-          });
+          })
 
           this.fs.getPatientMedicineOrders(user.uid).subscribe(orders => {
             const sorted = [...orders].sort((a, b) => {
@@ -140,7 +141,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
               return dB.getTime() - dA.getTime();
             });
             this.patientMedicineOrders = sorted.slice(0, 3);
-            this.patientMedicinePendingCount = orders.filter(o => o.status === 'pending').length;
+            this.patientMedicineProccessingCount = orders.filter(o => o.status === 'processing').length;
             this.patientMedicineCompletedCount = orders.filter(o => o.status === 'completed').length;
           });
         }

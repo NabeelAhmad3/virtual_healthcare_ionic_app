@@ -11,7 +11,7 @@
 
 <ion-content>
 
-  
+
   <div class="welcome-banner">
     <div class="welcome-text">
       <h2>Hello, {{ profile?.name?.split(' ')[0] || 'User' }} 👋</h2>
@@ -19,25 +19,19 @@
       <p *ngIf="profile?.role === 'laboratory'">Manage patient lab requests</p>
       <p *ngIf="profile?.role === 'pharmacy'">Manage medicines & orders</p>
     </div>
-    <ion-icon
-      [name]="profile?.role === 'laboratory' ? 'flask' : profile?.role === 'pharmacy' ? 'medkit' : 'medkit'"
+    <ion-icon [name]="profile?.role === 'laboratory' ? 'flask' : profile?.role === 'pharmacy' ? 'medkit' : 'medkit'"
       class="banner-icon">
     </ion-icon>
   </div>
 
-  
+
   <div class="ion-padding-horizontal ion-padding-top" *ngIf="profile?.role === 'patient'">
-    <ion-searchbar
-      [(ngModel)]="searchQuery"
-      (ionInput)="onSearch()"
-      (ionClear)="clearSearch()"
-      placeholder="Search doctors, nurses, physiotherapists..."
-      animated="true"
-      show-clear-button="always">
+    <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="onSearch()" (ionClear)="clearSearch()"
+      placeholder="Search doctors, nurses, physiotherapists..." animated="true" show-clear-button="always">
     </ion-searchbar>
   </div>
 
-  
+
   <div class="ion-padding-horizontal" *ngIf="isSearching">
     <div *ngIf="filteredSpecialists.length === 0" style="text-align:center; padding:20px">
       <ion-icon name="search-outline" style="font-size:40px; color:#ccc"></ion-icon>
@@ -58,9 +52,29 @@
     </ion-card>
   </div>
 
-  
-  <div class="stats-row ion-padding-horizontal"
-    *ngIf="!isSearching && profile?.role === 'laboratory'">
+  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role === 'patient'">
+
+    <div class="stat-card upcoming">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <h3>{{ confirmCount }}</h3>
+      <p>Confirmed Appointments</p>
+    </div>
+
+    <div class="stat-card pending">
+      <ion-icon name="medkit-outline"></ion-icon>
+      <h3>{{ patientMedicineProccessingCount }}</h3>
+      <p>Confirmed Medicines</p>
+    </div>
+
+    <div class="stat-card completed">
+      <ion-icon name="flask-outline"></ion-icon>
+      <h3>{{ labPatientproccessingCount }}</h3>
+      <p>Confirmed Lab Tests</p>
+    </div>
+
+  </div>
+
+  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role === 'laboratory'">
     <div class="stat-card pending">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ labPendingCount }}</h3>
@@ -78,9 +92,8 @@
     </div>
   </div>
 
-  
-  <div class="stats-row ion-padding-horizontal"
-    *ngIf="!isSearching && profile?.role === 'pharmacy'">
+
+  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role === 'pharmacy'">
     <div class="stat-card pending">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ medicinePendingCount }}</h3>
@@ -93,9 +106,9 @@
     </div>
   </div>
 
-  
+
   <div class="stats-row ion-padding-horizontal"
-    *ngIf="!isSearching && profile?.role !== 'laboratory' && profile?.role !== 'pharmacy'">
+    *ngIf="!isSearching && profile?.role !== 'patient' && profile?.role !== 'laboratory' && profile?.role !== 'pharmacy'">
     <div class="stat-card pending">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ pendingCount }}</h3>
@@ -113,7 +126,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching">
     <div class="section-title ion-padding-horizontal">Quick Actions</div>
     <div class="quick-actions ion-padding-horizontal">
@@ -126,7 +139,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching && profile?.role === 'laboratory'">
     <div class="section-title ion-padding-horizontal">Recent Lab Requests</div>
 
@@ -160,7 +173,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching && profile?.role === 'pharmacy'">
     <div class="section-title ion-padding-horizontal">Recent Medicine Orders</div>
 
@@ -195,7 +208,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching && profile?.role !== 'laboratory' && profile?.role !== 'pharmacy'">
     <div class="section-title ion-padding-horizontal">Recent Appointments</div>
 
@@ -216,10 +229,8 @@
         <ion-card-content>
           <div class="appt-row">
             <div>
-              <ion-icon
-                [name]="getRoleIcon(appt.specialistRole || appt.type)"
-                [color]="getRoleColor(appt.specialistRole || appt.type)"
-                class="appt-avatar">
+              <ion-icon [name]="getRoleIcon(appt.specialistRole || appt.type)"
+                [color]="getRoleColor(appt.specialistRole || appt.type)" class="appt-avatar">
               </ion-icon>
             </div>
             <div class="appt-info">
@@ -237,7 +248,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching && profile?.role === 'patient'">
     <div class="section-title ion-padding-horizontal">
       My Lab Tests
@@ -281,7 +292,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching && profile?.role === 'patient'">
     <div class="section-title ion-padding-horizontal">
       My Medicine Orders
@@ -325,7 +336,7 @@
     </div>
   </div>
 
-  
+
   <div *ngIf="!isSearching">
     <div class="section-title ion-padding-horizontal">Health Tips</div>
     <div class="tips-scroll ion-padding-horizontal" #tipsContainer>
